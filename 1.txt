@@ -1,0 +1,24 @@
+occupancy
+fold 1 has 38 yes and 164 no
+fold 2 has 38 yes and 165 no
+fold 3 has 38 yes and 165 no
+fold 4 has 38 yes and 165 no
+fold 5 has 38 yes and 165 no
+fold 6 has 38 yes and 165 no
+fold 7 has 38 yes and 164 no
+fold 8 has 38 yes and 164 no
+fold 9 has 38 yes and 164 no
+fold 10 has 37 yes and 165 no
+0
+pima
+fold 1 has 27 yes and 49 no
+fold 2 has 27 yes and 50 no
+fold 3 has 27 yes and 50 no
+fold 4 has 27 yes and 50 no
+fold 5 has 27 yes and 50 no
+fold 6 has 27 yes and 50 no
+fold 7 has 27 yes and 50 no
+fold 8 has 27 yes and 50 no
+fold 9 has 26 yes and 50 no
+fold 10 has 26 yes and 51 no
+0
