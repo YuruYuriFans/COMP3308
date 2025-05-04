@@ -72,7 +72,7 @@ def evaluate_accuracy(training_file: str, testing_file: str, k: int) -> float:
 if __name__ == "__main__":
     training_file = "training.csv"
     testing_file = "testing.csv"
-    k = 3
+    k = 1
 
     predictions = classify_nn(training_file, testing_file, k)
     print(predictions)

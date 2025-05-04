@@ -10,6 +10,7 @@ import random
 
 import csv
 
+
 def read_folds(filename):
     folds = {}
     current_fold = None
@@ -31,7 +32,7 @@ def read_folds(filename):
 
 # def find_accuracy()
 
-def find_accuracy_for_fold(train_data, test_data, kth_nearest_neighbour):
+def find_accuracy_for_KNN(train_data, test_data, kth_nearest_neighbour):
     training_points = [Point([float(x) for x in row[:-1]], row[-1]) for row in train_data]
     testing_points = [Point([float(x) for x in row[:-1]], row[-1]) for row in test_data]
 
@@ -42,13 +43,30 @@ def find_accuracy_for_fold(train_data, test_data, kth_nearest_neighbour):
             correct += 1
     return correct, len(testing_points)
 
-def cross_validation(filename: str, num_folds):
+
+def calculate_accuracy_nb(train_data, test_data):
+
+    correct_predictions = 0
+
+    true_labels = [row[-1] for row in test_data]
+    total_predictions = len(true_labels)
+    
+    predicted_labels = classify_nb(train_data, test_data)
+    
+    for i in range(total_predictions):
+        if true_labels[i] == predicted_labels[i]:
+            correct_predictions += 1
+
+    accuracy_value = correct_predictions / len(true_labels)
+
+    return accuracy_value
+
+
+def cross_validation(filename: str, num_folds, algorithm_type, kth_nearest_neighbour):
 
     folds = read_folds(filename)
 
     sorted_folds = [folds[f"fold{i+1}"] for i in range(num_folds)] # f"fold{i+1}" is the same as "fold" + str(i+1)
-
-    kth_nearest_neighbour = 3
 
     total_correct = 0
     total_samples = 0
@@ -62,8 +80,12 @@ def cross_validation(filename: str, num_folds):
             if other_index != fold_index:
                 train_folds.extend(sorted_folds[other_index])
 
-        # Evaluate accuracy using k-NN (with k=3 for neighbors)
-        correct_predictions, num_samples = find_accuracy_for_fold(train_folds, test_fold, kth_nearest_neighbour)
+        if algorithm_type == 'KNN':
+        # Evaluate accuracy using k-NN
+            correct_predictions, num_samples = find_accuracy_for_KNN(train_folds, test_fold, kth_nearest_neighbour)
+
+        elif algorithm_type == 'NB':
+            correct_predictions, num_samples = calculate_accuracy_nb(train_folds, test_fold)
 
         # Accumulate results over however many folds
         total_correct += correct_predictions
@@ -72,7 +94,7 @@ def cross_validation(filename: str, num_folds):
         average_accuracy = total_correct / total_samples
 
     return average_accuracy
-    folds.data = pd.read_csv(filename, header=None)
+
     
 
 if __name__ == "__main__":
@@ -80,8 +102,7 @@ if __name__ == "__main__":
     filename = "pima-folds.csv"
     num_folds = 10
 
-    average_accuracy = cross_validation(filename, num_folds)
+    average_accuracy = cross_validation(filename, num_folds, algorithm_type='KNN', kth_nearest_neighbour=7)
 
-    print(f"Accuracy (from file-based folds): {average_accuracy:.2%}")
-
+    print(f"Accuracy (from file-based folds): {average_accuracy:.4%}")
 

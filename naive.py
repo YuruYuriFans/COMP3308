@@ -49,6 +49,7 @@ def classify_nb(training_filename: str, testing_filename: str) -> list[str]:
             result.append("no")
     return result
 
+
 if __name__ == "__main__":
     training_file = "training.csv"
     testing_file = "testing.csv"
