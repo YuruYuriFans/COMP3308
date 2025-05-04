@@ -52,7 +52,22 @@ def classify_nn(training_filename: str, testing_filename: str, k: int) -> list[s
         each_testing_point.label = predicted_label
 
     result = [each_testing_point.label for each_testing_point in testing_points]
+
     return result
+
+
+def evaluate_accuracy(training_file: str, testing_file: str, k: int) -> float:
+    testing_data = pd.read_csv(testing_file, header=None).values.tolist()
+    true_labels = [row[-1] for row in testing_data]
+    
+    predicted_labels = classify_nn(training_file, testing_file, k)
+    
+    correct = sum(1 for true, pred in zip(true_labels, predicted_labels) if true == pred)
+
+    accuracy_value = correct / len(true_labels)
+
+    return accuracy_value
+
 
 if __name__ == "__main__":
     training_file = "training.csv"
@@ -61,3 +76,6 @@ if __name__ == "__main__":
 
     predictions = classify_nn(training_file, testing_file, k)
     print(predictions)
+
+    accuracy = (evaluate_accuracy(training_file, testing_file, k))
+    print(accuracy)

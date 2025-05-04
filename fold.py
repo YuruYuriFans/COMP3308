@@ -40,8 +40,9 @@ def fold(training_filename: str, testing_filename: str, folds: int = 10) -> list
             print(f"fold {i + 1} has {len(fold_yes)} yes and {len(fold_no)} no")
 
         
-        
     print(len(all_folds))
+
+    
 if __name__ == "__main__":
     print("occupancy")
     training_file = "occupancy.csv"

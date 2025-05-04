@@ -1,8 +1,10 @@
 from naive import *
 from nearest import *
 from ensemble import *
+from fold import *
 
 import pandas as pd
+import numpy as np
 import math
 import random
 
@@ -27,17 +29,59 @@ def read_folds(filename):
                 folds[current_fold].append(row)
     return folds
 
-# Example usage:
-folds = read_folds("pima-folds.csv")
-# Print out the number of data rows in each fold:
-for fold_name, rows in folds.items():
-    print(f"{fold_name} has {len(rows)} rows.")
-    # For demonstration, print the first row of each fold
-    if rows:
-        print(" First row:", rows[0])
+# def find_accuracy()
 
+def find_accuracy_for_fold(train_data, test_data, kth_nearest_neighbour):
+    training_points = [Point([float(x) for x in row[:-1]], row[-1]) for row in train_data]
+    testing_points = [Point([float(x) for x in row[:-1]], row[-1]) for row in test_data]
 
-def cross_validation(filename: str):
-    return
+    correct = 0
+    for test_point in testing_points:
+        predicted = test_against_training(training_points, Point(test_point.attributes, None), kth_nearest_neighbour)
+        if predicted == test_point.label:
+            correct += 1
+    return correct, len(testing_points)
+
+def cross_validation(filename: str, num_folds):
+
+    folds = read_folds(filename)
+
+    sorted_folds = [folds[f"fold{i+1}"] for i in range(num_folds)] # f"fold{i+1}" is the same as "fold" + str(i+1)
+
+    kth_nearest_neighbour = 3
+
+    total_correct = 0
+    total_samples = 0
+
+    for fold_index in range(num_folds):
+        test_fold = sorted_folds[fold_index]
+
+        # Combine all other folds into the training set
+        train_folds = []
+        for other_index in range(num_folds):
+            if other_index != fold_index:
+                train_folds.extend(sorted_folds[other_index])
+
+        # Evaluate accuracy using k-NN (with k=3 for neighbors)
+        correct_predictions, num_samples = find_accuracy_for_fold(train_folds, test_fold, kth_nearest_neighbour)
+
+        # Accumulate results over however many folds
+        total_correct += correct_predictions
+        total_samples += num_samples
+        
+        average_accuracy = total_correct / total_samples
+
+    return average_accuracy
     folds.data = pd.read_csv(filename, header=None)
     
+
+if __name__ == "__main__":
+
+    filename = "pima-folds.csv"
+    num_folds = 10
+
+    average_accuracy = cross_validation(filename, num_folds)
+
+    print(f"Accuracy (from file-based folds): {average_accuracy:.2%}")
+
+
