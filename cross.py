@@ -9,6 +9,8 @@ import math
 import random
 
 import csv
+from collections import Counter
+
 
 
 def read_folds(filename):
@@ -37,11 +39,16 @@ def find_accuracy_for_KNN(train_data, test_data, kth_nearest_neighbour):
     testing_points = [Point([float(x) for x in row[:-1]], row[-1]) for row in test_data]
 
     correct = 0
+    predicted_labels = []
+    true_labels = [point.label for point in testing_points]
+
     for test_point in testing_points:
         predicted = test_against_training(training_points, Point(test_point.attributes, None), kth_nearest_neighbour)
+        predicted_labels.append(predicted)
         if predicted == test_point.label:
             correct += 1
-    return correct, len(testing_points)
+
+    return correct, len(testing_points), true_labels, predicted_labels
 
 
 def classify_nb_from_lists(train_list: list[list[str]], test_list: list[list[str]]) -> list[str]:
@@ -72,14 +79,27 @@ def classify_nb_from_lists(train_list: list[list[str]], test_list: list[list[str
 def calculate_accuracy_nb(train_data, test_data):
     true_labels = [row[-1] for row in test_data]
     test_data_no_labels = [row[:-1] for row in test_data]
-
     predicted_labels = classify_nb_from_lists(train_data, test_data_no_labels)
 
     correct_predictions = sum(1 for i in range(len(true_labels)) if true_labels[i] == predicted_labels[i])
-    return correct_predictions, len(true_labels)
+    return correct_predictions, len(true_labels), true_labels, predicted_labels
+
+def precision_recall_f1(true_labels, predicted_labels, positive_class="yes"):
+    tp = sum(1 for t, p in zip(true_labels, predicted_labels) if t == p == positive_class)
+    fp = sum(1 for t, p in zip(true_labels, predicted_labels) if t != positive_class and p == positive_class)
+    fn = sum(1 for t, p in zip(true_labels, predicted_labels) if t == positive_class and p != positive_class)
+
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+
+    return precision, recall, f1
 
 
 def cross_validation(filename: str, num_folds, algorithm_type, kth_nearest_neighbour):
+
+    total_true_labels = []
+    total_predicted_labels = []
 
     folds = read_folds(filename)
 
@@ -98,22 +118,26 @@ def cross_validation(filename: str, num_folds, algorithm_type, kth_nearest_neigh
                 train_folds.extend(sorted_folds[other_index])
 
         if algorithm_type == 'KNN':
-        # Evaluate accuracy using k-NN
-            correct_predictions, num_samples = find_accuracy_for_KNN(train_folds, test_fold, kth_nearest_neighbour)
-
+            correct_predictions, num_samples, true_labels, predicted_labels = find_accuracy_for_KNN(train_folds, test_fold, kth_nearest_neighbour)
         elif algorithm_type == 'NB':
-            correct_predictions, num_samples = calculate_accuracy_nb(train_folds, test_fold)
-
+            correct_predictions, num_samples, true_labels, predicted_labels = calculate_accuracy_nb(train_folds, test_fold)
         elif algorithm_type == 'ENS':
-            correct_predictions, num_samples = calculate_accuracy_ensemble(train_folds, test_fold, 1, 7)
+            correct_predictions, num_samples, true_labels, predicted_labels = calculate_accuracy_ensemble(train_folds, test_fold, 1, 7)
 
         # Accumulate results over however many folds
         total_correct += correct_predictions
         total_samples += num_samples
+        total_true_labels.extend(true_labels)
+        total_predicted_labels.extend(predicted_labels)
         
         average_accuracy = total_correct / total_samples
+        precision, recall, f1 = precision_recall_f1(total_true_labels, total_predicted_labels)
 
-    return average_accuracy
+        print(f"Accuracy: {average_accuracy:.4%}")
+        print(f"Recall: {recall:.4f}")
+        print(f"F1 Score: {f1:.4f}")
+
+    return average_accuracy, recall, f1
 
 
 def classify_nn_from_lists(train_list: list[list[str]], test_list: list[list[str]], k: int) -> list[str]:
@@ -162,10 +186,13 @@ def calculate_accuracy_ensemble(train_data, test_data, k1, k2):
 
 if __name__ == "__main__":
 
-    filename = "occupancy-folds.csv"
+    filename = "pima-folds.csv"
     num_folds = 10
 
-    average_accuracy = cross_validation(filename, num_folds, algorithm_type='ENS', kth_nearest_neighbour=1)
+    cross_validation(filename, num_folds, algorithm_type='NB', kth_nearest_neighbour=1)
 
-    print(f"Accuracy (from file-based folds): {average_accuracy:.4%}")
+    # cross_validation(filename, num_folds, algorithm_type='KNN', kth_nearest_neighbour=1)
 
+    # average_accuracy = cross_validation(filename, num_folds, algorithm_type='ENS', kth_nearest_neighbour=1)
+
+    # print(f"Accuracy (from file-based folds): {average_accuracy:.4%}")
