@@ -38,7 +38,8 @@ def fold(training_filename: str, testing_filename: str, folds: int = 10) -> list
                 f.write(",".join([str(x) for x in record]) + "\n")
             f.write("\n")
             print(f"fold {i + 1} has {len(fold_yes)} yes and {len(fold_no)} no")
-
+            # accacy, precision, recall, f1 = find_accuracy_for_KNN(training_list, each_fold, 3) score  
+            # dffeence eason: knn is not a good classifier for many features, but naive bayes is still a good classifier.
         
     print(len(all_folds))
 
